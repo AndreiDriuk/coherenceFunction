@@ -1,5 +1,6 @@
-clear 
-for fs = [10.005:0.005:10.05]*10^8 %10.05:0.005:
+clear
+addpath('Дополнительные функции для расчета\')
+for fs = [9.8:0.05:10.2]*10^9 %10.05:0.005: %Для вычисления одного файла использовать fs = 10^9
 ztop =[-100000, 0];%:10000:0;
 lt = 140660; % coefficient in cosh(z/lt) 
 lb = 198722; % coefficient in 1-z^2/lb^2
@@ -142,6 +143,7 @@ for ix = 1:length(x)
         GammaUnder(ix,iy,:,:) = FUnderFunSA(1,1,:,:).*exp(-x(ix).^2/ax^2*GUnderFunSAx(1,1,:,:)-y(iy)^2/by^2*GUnderFunSAy(1,1,:,:)).*EXPUnderSA(1,1,:,:);
     end
 end
+
 Coherency_Function = cat(4,GammaTop,GammaBot,GammaUnder);
 
 clearvars GammaTop GammaBot GammaUnder FUnderFunSAx FUnderFunSAy FUnderFunSA  PsiUnderSAx ...

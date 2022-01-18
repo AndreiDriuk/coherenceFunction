@@ -1,3 +1,4 @@
+%% Скрипт для расчета средней энергии импульса с учетом координат
 clear
 load('CohEarth10_8.mat');
 lt = 140660; % coefficient in cosh(z/lt) 
