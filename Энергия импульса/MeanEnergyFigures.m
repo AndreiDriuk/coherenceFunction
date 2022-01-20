@@ -1,8 +1,9 @@
 %% Скрипт для расчета средней энергии импульса без координат
 clear
 close all
-addpath('../Данные/')
+%addpath('../Данные/')
 %load('CohEarth_sigma05_fd_002.mat');
+%load('CohEarth_fs0.5HHz.mat');
 load('CohEarth10_8.mat');
 %% параметры трассы
 lt = 140660; % coefficient in cosh(z/lt) 
@@ -19,8 +20,8 @@ kplTop2 = kplm^2./cosh(z(z<=0)/lt);
 kplBot2 = kplm^2*sqrt(1-z((z>0)&(z<=lb)).^2/lb^2);
 kplUnder2 =z(z>lb)*0;
 %% определение суммарной и разнсотной частот
-Fs = (0.8:0.005:1.2)*10^9;
-Fd = ([-10:0.002:10]*10^8)'; %% t in DFT
+Fs = (0.8:0.005:1.2)*10^9;%Fs = (0.3:0.01:0.7)*10^9;
+Fd = ([-10:0.002:10]*10^8)';%Fd = ([-6:0.002:6]*10^7)'; %% t in DFT
 ix = round(length(x)/2); % uncomment for Coherence
 
 %% экспоненциальный множитель с вычетом 1
@@ -37,30 +38,30 @@ for i = 1:length(Fs)
 end
 
 %% определение импульса 
-T0 = 10^-8; % длительность импульса
-fc = 1*10^9; % Центральная частота импульса
+T0 =10^-8; % длительность импульса
+fc = 10^9; % Центральная частота импульса
 
 p02 = zeros(length(Fs), length(Fd));
 for i = 1:length(Fs)
     for j = 1:length(Fd)
-       p02(i,j) = T0^2/(2*pi)*exp(-T0^2/2*(fc-Fs(i))^2)*exp(-T0^2*Fd(j)^2/4);
+       p02(i,j) = T0^2/(2*pi)*exp(-T0^2*(4*pi^2)*(fc-Fs(i))^2)*exp(-T0^2*(4*pi^2)*Fd(j)^2/4);
     end
 end
 
 %% подынтегральное выражение 
 MeanField = p02.*exp(phi1-phi2).*squeeze(CoherenceEarth(:, ix,:));
-%MeanFieldWoutCoh = p02.*exp(phi1-phi2); checking
+MeanFieldWoutCoh = p02.*exp(phi1-phi2); 
 
 MeanFieldFFT =  zeros(length(Fs),length(Fd));
 Signal = zeros(length(Fs),length(Fd));
 
 MeanFieldSum = zeros(1, length(Fd));
-%MeanFieldWoutCohSum = zeros(1, length(Fd)); checking
+MeanFieldWoutCohSum = zeros(1, length(Fd)); 
 SignalSum = zeros(1, length(Fd));
 %% Первоачальной суммирование по суммарной частоте (первый интеграл)
 for j = 1:length(Fd)
    MeanFieldSum(j) = trapz(Fs, MeanField(:, j));
-   %MeanFieldWoutCohSum(j) = trapz(Fs, MeanFieldWoutCoh(:, j)); %checking
+   MeanFieldWoutCohSum(j) = trapz(Fs, MeanFieldWoutCoh(:, j)); 
    SignalSum(j) = trapz(Fs, p02(:, j));
 end
 
@@ -70,9 +71,9 @@ end
 figure
 plot(Fd/10^6, SignalSum, 'LineWidth', 2)
 hold on
-%plot(Fd, abs(MeanFieldWoutCohSum), 'LineWidth', 2)
-plot(Fd/10^6, abs(MeanFieldSum), 'LineWidth', 2)
-legend({'input', 'output'})
+plot(Fd/10^6, abs(MeanFieldWoutCohSum),'--', 'LineWidth', 2)
+plot(Fd/10^6, abs(MeanFieldSum),'g-.', 'LineWidth', 2, 'Color', [0.16, 0.38, 0.27])
+%legend({'input', 'output', 'output with fluctuations'})
 
 set(gca, 'FontSize', 16)
 grid minor
@@ -83,7 +84,7 @@ xlabel('f_d MHz')
 % FFTSignalSum - исходный импульс
 % FFTMeanFieldSum - конечный импульс
 FFTSignalSum = abs(fftshift(fft(SignalSum)));
-%FFTMeanFieldWoutCohSum = fftshift(fft(MeanFieldWoutCohSum)); checking
+FFTMeanFieldWoutCohSum = fftshift(fft(MeanFieldWoutCohSum));
 FFTMeanFieldSum=abs(fftshift(fft(MeanFieldSum)));
 
 %% переход во временную область и определение параметров
@@ -94,13 +95,13 @@ t = (-fs_d/2:fs_d/length(Fd):fs_d/2-fs_d/length(Fd));
 figure
 plot(t*10^6, FFTSignalSum, 'LineWidth', 2)
 hold on
-%plot(t, abs(FFTMeanFieldWoutCohSum), 'LineWidth', 2)
-plot(t*10^6, FFTMeanFieldSum, 'LineWidth', 2)
+plot(t*10^6, abs(FFTMeanFieldWoutCohSum),'--', 'LineWidth', 2)
+plot(t*10^6, FFTMeanFieldSum,'-.' ,'LineWidth', 2, 'Color', [0.16, 0.38, 0.27])
 set(gca,'Fontsize', 16)
 grid minor
 xlabel('t, [µs]','Fontsize', 16)
-xlim([-0.05, 5*10^(-1)])
-legend({'input pulse', 'output pulse'})
+%xlim([-0.05, 2*10^(-1)])
+%legend({'input', 'output', 'output with fluctuations'})
 set(gca,'Fontsize', 16)
 
 %% проверка сохранности площади под энергией импульса во времени
